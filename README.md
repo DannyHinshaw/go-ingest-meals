@@ -1,8 +1,9 @@
-## go-ingest-meals
+# go-ingest-meals
 
 Testing architectural patterns with Golang, RabbitMQ, & Docker Compose.
 The idea is to use a Twitter stream to create a variable streaming input to test scaling patterns.
 
+## Stream
 We will monitor the following keywords in Tweets:
 
 - breakfast
@@ -14,16 +15,18 @@ We will monitor the following keywords in Tweets:
 - dinner
 - supper
 
+
 ![Merry & Pippin](https://i.imgflip.com/7a9b3.jpg?a438885)
+&nbsp;
 
-### Roadmap
+## Roadmap
 
-- [ ] - Add ELK Stack
+- [ ] Add ELK Stack
 
-- [ ] - Scale with Kubernetes/Minikube
+- [ ] Scale with Kubernetes/Minikube
 
 
-### Run
+## Run
 
 ```bash
 docker-compose up --build
