@@ -1,0 +1,37 @@
+version: "3"
+
+services:
+  ingest:
+    container_name: ingest
+    build: ./ingest
+    depends_on:
+      - rabbitmq
+    environment:
+      - ACCESS_SECRET=${ACCESS_SECRET}
+      - ACCESS_KEY=${ACCESS_KEY}
+      - CONSUMER_SECRET=${CONSUMER_SECRET}
+      - CONSUMER_KEY=${CONSUMER_KEY}
+    command: ["./wait-for-it.sh", "rabbitmq:15672", "--timeout=60", "--", "./ingest"]
+
+  worker:
+    container_name: worker
+    build: ./worker
+    depends_on:
+      - rabbitmq
+      - ingest
+    command: ["./wait-for-it.sh", "rabbitmq:15672", "--timeout=60", "--", "./worker"]
+
+  rabbitmq:
+    image: "bitnami/rabbitmq:3.8"
+    container_name: rabbitmq
+    ports:
+      - "4369:4369"
+      - "5672:5672"
+      - "25672:25672"
+      - "15672:15672"
+    volumes:
+      - "rabbitmq_data:/bitnami"
+
+volumes:
+  rabbitmq_data:
+    driver: local
