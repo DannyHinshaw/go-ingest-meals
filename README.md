@@ -21,7 +21,7 @@ We will monitor the following keywords in Tweets:
 
 ## Roadmap
 
-- [ ] Add ELK Stack
+- [x] Add ELK Stack
 
 - [ ] Scale with Kubernetes/Minikube
 
