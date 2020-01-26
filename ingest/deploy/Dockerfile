@@ -9,11 +9,11 @@ ADD . /app/
 WORKDIR /app
 
 # Build the go executable
-RUN go build -o worker .
-RUN ls -al
+RUN go build -o ingest .
 
 # Make create app user and run it.
-RUN chmod +x worker
+RUN chmod +x ingest
+RUN mv deploy/wait-for-it.sh .
 RUN chmod +x wait-for-it.sh
 RUN useradd -ms /bin/bash appuser
 

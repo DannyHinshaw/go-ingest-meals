@@ -5,17 +5,15 @@ RUN apt-get -y update && apt-get -y upgrade && \
 
 # Add the source
 RUN mkdir /app
-RUN ls -al
-
 ADD . /app/
 WORKDIR /app
 
 # Build the go executable
-RUN go build -o ingest .
-RUN ls -al
+RUN go build -o worker .
 
 # Make create app user and run it.
-RUN chmod +x ingest
+RUN chmod +x worker
+RUN mv deploy/wait-for-it.sh .
 RUN chmod +x wait-for-it.sh
 RUN useradd -ms /bin/bash appuser
 

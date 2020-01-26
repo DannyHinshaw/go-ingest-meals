@@ -3,7 +3,9 @@ version: "3"
 services:
   ingest:
     container_name: ingest
-    build: ./ingest
+    build:
+      context: ingest
+      dockerfile: deploy/Dockerfile
     depends_on:
       - rabbitmq
     environment:
@@ -15,7 +17,9 @@ services:
 
   worker:
     container_name: worker
-    build: ./worker
+    build:
+      context: worker
+      dockerfile: deploy/Dockerfile
     depends_on:
       - rabbitmq
       - ingest
