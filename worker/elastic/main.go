@@ -8,13 +8,14 @@ import (
 	es "github.com/olivere/elastic/v7"
 	"log"
 	"strings"
+	"time"
 )
 
 type TweetElastic struct {
 	User     string           `json:"user"`
 	Meals    []string         `json:"meals"`
 	Message  string           `json:"message"`
-	Created  string           `json:"created,omitempty"`
+	Created  time.Time        `json:"created,omitempty"`
 	Location string           `json:"location,omitempty"`
 	Suggest  *es.SuggestField `json:"suggest_field,omitempty"`
 }
@@ -39,10 +40,10 @@ const mapping = `
 				"fielddata": true
 			},
 			"created":{
-				"type":"text"
+				"type":"date"
 			},
 			"location":{
-				"type":"text"
+				"type":"keyword"
 			},
 			"suggest_field":{
 				"type":"completion"
@@ -87,13 +88,21 @@ func elasticAdd(client *es.Client, meals []string, tweet twitter.Tweet) {
 		}
 	}
 
+	// Convert tweet time format to golang builtin
+	layout := "Wed Oct 10 20:19:24 +0000 2018"
+	tweetTime, err := time.Parse(layout, tweet.CreatedAt)
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+
 	// Index a tweet (using JSON serialization)
 	newTweet := TweetElastic{
 		Message:  tweet.Text,
 		User:     tweet.User.Name,
-		Meals:    meals,
-		Created:  tweet.CreatedAt,
 		Location: tweet.User.Location,
+		Created:  tweetTime,
+		Meals:    meals,
 	}
 	put, err := client.Index().
 		Index(index).
