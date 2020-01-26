@@ -39,6 +39,7 @@ services:
       - elasticsearch
 
   elasticsearch:
+    container_name: elasticsearch
     build:
       context: elasticsearch/
       args:
@@ -64,6 +65,7 @@ services:
       - elk
 
   logstash:
+    container_name: logstash
     build:
       context: logstash/
       args:
@@ -88,6 +90,7 @@ services:
       - elasticsearch
 
   kibana:
+    container_name: kibana
     build:
       context: kibana/
       args:

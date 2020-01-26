@@ -31,3 +31,9 @@ We will monitor the following keywords in Tweets:
 ```bash
 docker-compose up --build
 ```
+
+## Kibana
+
+Visit `http://localhost:5601/` in your browser. Login with:
+- User: `elastic`
+- Pass: `changeme`
