@@ -8,6 +8,8 @@ services:
       dockerfile: deploy/Dockerfile
     depends_on:
       - rabbitmq
+    networks:
+      - elk
     environment:
       - ACCESS_SECRET=${ACCESS_SECRET}
       - ACCESS_KEY=${ACCESS_KEY}
@@ -23,7 +25,9 @@ services:
     depends_on:
       - rabbitmq
       - ingest
-    command: ["./wait-for-it.sh", "rabbitmq:15672", "--timeout=60", "--", "./worker"]
+    networks:
+      - elk
+    command: ["./wait-for-it.sh", "elasticsearch:9200", "--timeout=60", "--", "./worker"]
 
   rabbitmq:
     image: "bitnami/rabbitmq:3.8"
@@ -37,6 +41,8 @@ services:
       - "rabbitmq_data:/bitnami"
     depends_on:
       - elasticsearch
+    networks:
+      - elk
 
   elasticsearch:
     container_name: elasticsearch

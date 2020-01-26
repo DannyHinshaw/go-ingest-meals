@@ -3,6 +3,7 @@ package message
 import (
 	"github.com/streadway/amqp"
 	"log"
+	"worker/elastic"
 )
 
 func failOnError(err error, msg string) {
@@ -24,6 +25,10 @@ func CreateChannel(conn *amqp.Connection) *amqp.Channel {
 }
 
 func Listen(ch *amqp.Channel, qname string) {
+
+	// Init client once per worker
+	elasticClient := elastic.NewClient()
+
 	q, err := ch.QueueDeclare(
 		qname, // name
 		false, // durable
@@ -48,7 +53,7 @@ func Listen(ch *amqp.Channel, qname string) {
 	forever := make(chan bool)
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
+			elastic.ProcessTweet(elasticClient, d.Body)
 		}
 	}()
 

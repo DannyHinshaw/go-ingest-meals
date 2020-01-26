@@ -2,34 +2,12 @@ package stream
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"ingest/message"
 	"log"
 	"os"
 )
-
-type AddTweetTask struct {
-	UserName  string
-	CreatedAt string
-	Text      string
-}
-
-func createTweetTask(tweet *twitter.Tweet) AddTweetTask {
-	tweetText := tweet.Text
-	if tweet.ExtendedTweet != nil {
-		tweetText = tweet.ExtendedTweet.FullText
-	}
-
-	task := AddTweetTask{
-		UserName:  tweet.User.Name,
-		CreatedAt: tweet.CreatedAt,
-		Text:      tweetText,
-	}
-
-	return task
-}
 
 func newClient() *twitter.Client {
 
@@ -80,14 +58,12 @@ func Init() {
 	// Stream data handling
 	demux := twitter.NewSwitchDemux()
 	demux.Tweet = func(tweet *twitter.Tweet) {
-		task := createTweetTask(tweet)
-		body, err := json.Marshal(task)
+		task, err := json.Marshal(tweet)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		msg := string(body)
-		fmt.Println("task::", task)
+		msg := string(task)
 		message.SendMessage(ch, "work", msg)
 	}
 
