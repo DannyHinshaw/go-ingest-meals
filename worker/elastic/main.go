@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/jinzhu/now"
 	es "github.com/olivere/elastic/v7"
 	"log"
 	"strings"
@@ -89,8 +90,7 @@ func elasticAdd(client *es.Client, meals []string, tweet twitter.Tweet) {
 	}
 
 	// Convert tweet time format to golang builtin
-	layout := "Wed Oct 10 20:19:24 +0000 2018"
-	tweetTime, err := time.Parse(layout, tweet.CreatedAt)
+	tweetTime, err := now.Parse(tweet.CreatedAt)
 	if err != nil {
 		// Handle error
 		panic(err)
