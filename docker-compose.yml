@@ -1,34 +1,6 @@
 version: "3.7"
 
 services:
-  ingest:
-    container_name: ingest
-    build:
-      context: ingest
-      dockerfile: deploy/Dockerfile
-    depends_on:
-      - rabbitmq
-    networks:
-      - elk
-    environment:
-      - ACCESS_SECRET=${ACCESS_SECRET}
-      - ACCESS_KEY=${ACCESS_KEY}
-      - CONSUMER_SECRET=${CONSUMER_SECRET}
-      - CONSUMER_KEY=${CONSUMER_KEY}
-    command: ["./wait-for-it.sh", "rabbitmq:15672", "--timeout=60", "--", "./ingest"]
-
-  worker:
-    container_name: worker
-    build:
-      context: worker
-      dockerfile: deploy/Dockerfile
-    depends_on:
-      - rabbitmq
-      - ingest
-    networks:
-      - elk
-    command: ["./wait-for-it.sh", "elasticsearch:9200", "--timeout=60", "--", "./worker"]
-
   rabbitmq:
     image: "bitnami/rabbitmq:3.8"
     container_name: rabbitmq
@@ -112,6 +84,50 @@ services:
       - elk
     depends_on:
       - elasticsearch
+
+  metricbeat:
+    build: ./metricbeat
+    container_name: metricbeat
+    environment:
+      - WAIT_FOR_HOSTS=elasticsearch:9200 kibana:5601
+      - HOST_ELASTICSEARCH=elasticsearch:9200
+      - HOST_KIBANA=kibana:5601
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+      - kibana
+      - logstash
+      - rabbitmq
+    command: ["./wait-for-it.sh", "kibana:5601", "--timeout=60", "--", "./metricbeat.sh"]
+
+  ingest:
+    container_name: ingest
+    build:
+      context: ingest
+      dockerfile: deploy/Dockerfile
+    depends_on:
+      - rabbitmq
+    networks:
+      - elk
+    environment:
+      - ACCESS_SECRET=${ACCESS_SECRET}
+      - ACCESS_KEY=${ACCESS_KEY}
+      - CONSUMER_SECRET=${CONSUMER_SECRET}
+      - CONSUMER_KEY=${CONSUMER_KEY}
+    command: ["./wait-for-it.sh", "rabbitmq:15672", "--timeout=60", "--", "./ingest"]
+
+  worker:
+    container_name: worker
+    build:
+      context: worker
+      dockerfile: deploy/Dockerfile
+    depends_on:
+      - rabbitmq
+      - ingest
+    networks:
+      - elk
+    command: ["./wait-for-it.sh", "rabbitmq:15672", "--timeout=60", "--", "./worker"]
 
 networks:
   elk:

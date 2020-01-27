@@ -1,0 +1,37 @@
+metricbeat.modules.path: .
+metricbeat.modules:
+
+  #------------------------------- RabbitMQ Module -------------------------------
+  - module: rabbitmq
+    enabled: true
+    metricsets: ["node"]
+    period: 5s
+    hosts: ["rabbitmq:4369"]
+    username: guest
+    password: guest
+
+#-------------------------- Elasticsearch output ------------------------------
+output.elasticsearch:
+  hosts: ["${HOST_ELASTICSEARCH}"]
+  username: "elastic"
+  password: "changeme"
+
+setup.kibana:
+  host: "${HOST_KIBANA}"
+  username: "elastic"
+  password: "changeme"
+
+#============================== Dashboards =====================================
+# These settings control loading the sample dashboards to the Kibana index. Loading
+# the dashboards is disabled by default and can be enabled either by setting the
+# options here, or by using the `-setup` CLI flag.
+setup.dashboards.enabled: true
+
+logging.level: warning
+logging.to_files: true
+logging.to_syslog: false
+logging.files:
+  path: /var/log/metricbeat
+  name: metricbeat.log
+  keepfiles: 2
+  permissions: 0644
