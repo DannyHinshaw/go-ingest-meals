@@ -1,20 +1,15 @@
-FROM golang:1.13.6
+FROM golang:1.16-alpine as builder
 
-RUN apt-get -y update && apt-get -y upgrade && \
-    apt-get -y install bash git openssh-client openssh-server
-
-# Add the source
-RUN mkdir /app
-ADD ../../pkg/ingest/deploy /app/
 WORKDIR /app
+COPY . .
 
-# Build the go executable
-RUN go build -o ingest .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod vendor -a -installsuffix cgo -ldflags="-w -s" -o ingest cmd/ingest/main.go
 
-# Make create app user and run it.
-RUN chmod +x ingest
-RUN mv deploy/wait-for-it.sh .
-RUN chmod +x wait-for-it.sh
-RUN useradd -ms /bin/bash appuser
+FROM alpine:latest
 
-USER appuser
+WORKDIR /app
+COPY --from=builder /app/ingest .
+
+EXPOSE 3650
+
+ENTRYPOINT ["./ingest"]
