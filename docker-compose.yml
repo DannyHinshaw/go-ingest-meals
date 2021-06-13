@@ -1,111 +1,11 @@
-version: "3.7"
+version: "3.8"
 
 services:
-  rabbitmq:
-    image: "bitnami/rabbitmq:3.8"
-    container_name: rabbitmq
-    ports:
-      - "4369:4369"
-      - "5672:5672"
-      - "25672:25672"
-      - "15672:15672"
-    volumes:
-      - "rabbitmq_data:/bitnami"
-    depends_on:
-      - elasticsearch
-    networks:
-      - elk
-
-  elasticsearch:
-    container_name: elasticsearch
-    build:
-      context: elasticsearch/
-      args:
-        ELK_VERSION: $ELK_VERSION
-    volumes:
-      - type: bind
-        source: ./elasticsearch/config/elasticsearch.yml
-        target: /usr/share/elasticsearch/config/elasticsearch.yml
-        read_only: true
-      - type: volume
-        source: elasticsearch
-        target: /usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-      ELASTIC_PASSWORD: changeme
-      # Use single node discovery in order to disable production mode and avoid bootstrap checks
-      # see https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
-      discovery.type: single-node
-    networks:
-      - elk
-
-  logstash:
-    container_name: logstash
-    build:
-      context: logstash/
-      args:
-        ELK_VERSION: $ELK_VERSION
-    volumes:
-      - type: bind
-        source: ./logstash/config/logstash.yml
-        target: /usr/share/logstash/config/logstash.yml
-        read_only: true
-      - type: bind
-        source: ./logstash/pipeline
-        target: /usr/share/logstash/pipeline
-        read_only: true
-    ports:
-      - "5000:5000"
-      - "9600:9600"
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-    networks:
-      - elk
-    depends_on:
-      - elasticsearch
-
-  kibana:
-    container_name: kibana
-    build:
-      context: kibana/
-      args:
-        ELK_VERSION: $ELK_VERSION
-    volumes:
-      - type: bind
-        source: ./kibana/config/kibana.yml
-        target: /usr/share/kibana/config/kibana.yml
-        read_only: true
-    ports:
-      - "5601:5601"
-    networks:
-      - elk
-    depends_on:
-      - elasticsearch
-
-  metricbeat:
-    build: ./metricbeat
-    container_name: metricbeat
-    environment:
-      - WAIT_FOR_HOSTS=elasticsearch:9200 kibana:5601
-      - HOST_ELASTICSEARCH=elasticsearch:9200
-      - HOST_KIBANA=kibana:5601
-    networks:
-      - elk
-    depends_on:
-      - elasticsearch
-      - kibana
-      - logstash
-      - rabbitmq
-    command: ["./wait-for-it.sh", "kibana:5601", "--timeout=60", "--", "./metricbeat.sh"]
-
   ingest:
     container_name: ingest
     build:
-      context: ingest
-      dockerfile: deploy/Dockerfile
+      context: services/pkg/ingest
+      dockerfile: services/deploy/ingest/Dockerfile
     depends_on:
       - rabbitmq
     networks:
@@ -120,20 +20,11 @@ services:
   worker:
     container_name: worker
     build:
-      context: worker
-      dockerfile: deploy/Dockerfile
+      context: services/pkg/worker
+      dockerfile: services/deploy/worker/Dockerfile
     depends_on:
       - rabbitmq
       - ingest
     networks:
       - elk
     command: ["./wait-for-it.sh", "rabbitmq:15672", "--timeout=60", "--", "./worker"]
-
-networks:
-  elk:
-    driver: bridge
-
-volumes:
-  elasticsearch:
-  rabbitmq_data:
-    driver: local
