@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 
 	"github.com/dannyhinshaw/go-ingest-meals/pkg/ingest"
+	"github.com/dannyhinshaw/go-ingest-meals/pkg/ingest/config"
 	"github.com/dghubble/go-twitter/twitter"
+	log "github.com/sirupsen/logrus"
 )
+
+const serviceName = "ingest"
 
 // IngestApp the data ingestion point, streaming twitter data.
 type IngestApp struct {
@@ -16,14 +19,19 @@ type IngestApp struct {
 }
 
 // newIngestApp constructor func creates a new IngestApp instance.
-func newIngestApp() *IngestApp {
+func newIngestApp() (*IngestApp, error) {
+	configPath := ""
+	if len(os.Args) > 1 {
+		configPath = os.Args[1]
+	}
+
+	cfg, err := config.ReadConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
 
 	// Create twitter stream client and define params
-	consumerKey := os.Getenv("CONSUMER_KEY")
-	consumerSecret := os.Getenv("CONSUMER_SECRET")
-	accessKey := os.Getenv("ACCESS_KEY")
-	accessSecret := os.Getenv("ACCESS_SECRET")
-	client := ingest.NewTwitterClient(consumerKey, consumerSecret, accessKey, accessSecret)
+	client := ingest.NewTwitterClient(cfg.ConsumerKey, cfg.ConsumerSecret, cfg.AccessKey, cfg.AccessSecret)
 	params := &twitter.StreamFilterParams{
 		StallWarnings: twitter.Bool(true),
 		Track: []string{
@@ -59,10 +67,15 @@ func newIngestApp() *IngestApp {
 	return &IngestApp{
 		Stream: stream,
 		Demux:  demux,
-	}
+	}, nil
 }
 
 func main() {
-	app := newIngestApp()
+	log.Infof(`new "%s" instance is deployed`, serviceName)
+	app, err := newIngestApp()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	app.Demux.HandleChan(app.Stream.Messages)
 }
