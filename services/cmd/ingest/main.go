@@ -9,7 +9,14 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 )
 
-func main() {
+// IngestApp the data ingestion point, streaming twitter data.
+type IngestApp struct {
+	Stream *twitter.Stream
+	Demux  twitter.Demux
+}
+
+// newIngestApp constructor func creates a new IngestApp instance.
+func newIngestApp() *IngestApp {
 
 	// Create twitter stream client and define params
 	consumerKey := os.Getenv("CONSUMER_KEY")
@@ -49,6 +56,13 @@ func main() {
 		log.Println("TODO: Something with msg::", msg)
 	}
 
-	// Start streaming
-	demux.HandleChan(stream.Messages)
+	return &IngestApp{
+		Stream: stream,
+		Demux:  demux,
+	}
+}
+
+func main() {
+	app := newIngestApp()
+	app.Demux.HandleChan(app.Stream.Messages)
 }
